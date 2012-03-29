@@ -5,4 +5,5 @@ Ganttico Epoch:
 	If more than one duplicate is kept, any changed might be reflected in any duplicate.
 	This project would then allow to maintain a clean file system.
 ----------
-
+Ganttico Epoch:
+	First thing to do is to set up the development environment.
