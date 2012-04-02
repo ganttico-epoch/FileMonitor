@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="FileMonitor" basedir="." default="main">
+
+	<property file="build.properties" />
+
+	<target name="clean">
+		<delete dir="bin" />
+		<delete dir="dist" />
+	</target>
+
+	<target name="compile">
+		<mkdir dir="bin" />
+		<javac srcdir="src" destdir="bin" includeantruntime="false" />
+	</target>
+
+	<target name="jar" depends="compile">
+		<mkdir dir="dist" />
+		<jar destfile="dist/FileMonitor.jar" basedir="bin">
+			<manifest>
+				<attribute name="Main-Class" value="file_monitor.Main" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="run" depends="jar">
+		<java jar="dist/FileMonitor.jar" fork="true" />
+	</target>
+
+	<target name="main" depends="clean, run" />
+
+</project>
