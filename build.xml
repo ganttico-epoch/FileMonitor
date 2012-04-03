@@ -3,29 +3,197 @@
 
 	<property file="build.properties" />
 
-	<target name="clean">
-		<delete dir="bin" />
-		<delete dir="dist" />
+	<property name="dir.app.bin" value="${dir.temp}/app_classes" />
+	<property name="dir.test.bin" value="${dir.temp}/test_classes" />
+	<property name="dir.app.doc" value="${dir.temp}/app_javadoc" />
+	<property name="dir.test.doc" value="${dir.temp}/test_javadoc" />
+	<property name="dir.pub" value="${dir.publish}/${app.name}/${app.name}-${app.version}/" />
+	<property name="file.app.pub" value="${app.name}-${app.version}-${app.state}.jar" />
+	<property name="file.test.pub" value="${test.name}-${app.version}-${app.state}.jar" />
+	<property name="file.app_src.pub" value="${app.name}_src-${app.version}-${app.state}.tar.gz" />
+	<property name="file.test_src.pub" value="${test.name}_src-${app.version}-${app.state}.tar.gz" />
+	<property name="file.app_doc.pub" value="${app.name}_doc-${app.version}-${app.state}.tar.gz" />
+	<property name="file.test_doc.pub" value="${test.name}_doc-${app.version}-${app.state}.tar.gz" />
+
+	<target name="clean_app">
+		<delete dir="${dir.app.bin}" />
+		<delete dir="${dir.app.doc}" />
 	</target>
 
-	<target name="compile">
-		<mkdir dir="bin" />
-		<javac srcdir="src" destdir="bin" includeantruntime="false" />
+	<target name="clean_test">
+		<delete dir="${dir.test.bin}" />
+		<delete dir="${dir.test.doc}" />
 	</target>
 
-	<target name="jar" depends="compile">
-		<mkdir dir="dist" />
-		<jar destfile="dist/FileMonitor.jar" basedir="bin">
+	<target name="clean_all">
+		<antcall target="clean_app" />
+		<antcall target="clean_test" />
+		<delete dir="${dir.temp}" />
+	</target>
+
+	<path id="classpath_app">
+		<fileset dir="${dir.app.lib}" includes="**/*.jar" />
+	</path>
+
+	<path id="classpath_test">
+		<fileset dir="${dir.test.lib}" includes="**/*.jar" />
+	</path>
+
+	<target name="compile_app">
+		<mkdir dir="${dir.app.bin}" />
+		<javac srcdir="${dir.app.src}" destdir="${dir.app.bin}" includeantruntime="false">
+			<classpath refid="classpath_app" />
+		</javac>
+	</target>
+
+	<target name="compile_test">
+		<mkdir dir="${dir.test.bin}" />
+		<javac srcdir="${dir.test.src}" destdir="${dir.test.bin}" includeantruntime="false">
+			<classpath refid="classpath_test" />
+		</javac>
+	</target>
+
+	<target name="compile_all">
+		<antcall target="compile_app" />
+		<antcall target="compile_test" />
+	</target>
+
+	<target name="javadoc_app" depends="compile_app">
+		<mkdir dir="${dir.app.doc}" />
+		<javadoc sourcepath="${dir.app.src}" destdir="${dir.app.doc}" windowtitle="${app.name}-${app.version}-${app.state} Javadoc">
+			<classpath refid="classpath_app" />
+		</javadoc>
+	</target>
+
+	<target name="javadoc_test" depends="compile_test">
+		<mkdir dir="${dir.test.doc}" />
+		<javadoc sourcepath="${dir.test.src}" destdir="${dir.test.doc}" windowtitle="${app.name}Test-${app.version}-${app.state} Javadoc">
+			<classpath refid="classpath_test" />
+		</javadoc>
+	</target>
+
+	<target name="javadoc_all" depends="compile_all">
+		<antcall target="javadoc_app" />
+		<antcall target="javadoc_test" />
+	</target>
+
+	<target name="jar_app" depends="compile_app">
+		<mkdir dir="${dir.temp}" />
+		<jar destfile="${dir.temp}/${app.name}.jar" basedir="${dir.app.bin}">
+			<zipgroupfileset dir="${dir.app.lib}" includes="**/*.jar" />
 			<manifest>
-				<attribute name="Main-Class" value="file_monitor.Main" />
+				<attribute name="Main-Class" value="${app.class}" />
 			</manifest>
 		</jar>
 	</target>
 
-	<target name="run" depends="jar">
-		<java jar="dist/FileMonitor.jar" fork="true" />
+	<target name="jar_test" depends="compile_test">
+		<mkdir dir="${dir.temp}" />
+		<jar destfile="${dir.temp}/${test.name}.jar" basedir="${dir.test.bin}">
+			<zipgroupfileset dir="${dir.test.lib}" includes="**/*.jar" />
+			<manifest>
+				<attribute name="Main-Class" value="${test.class}" />
+			</manifest>
+		</jar>
 	</target>
 
-	<target name="main" depends="clean, run" />
+	<target name="jar_all" depends="compile_all">
+		<antcall target="jar_app" />
+		<antcall target="jar_test" />
+	</target>
+
+	<target name="test_app" depends="jar_all">
+		<junit errorproperty="test.error" failureproperty="test.fail">
+			<formatter type="plain" />
+			<classpath location="${dir.temp}/${test.name}.jar" />
+			<test name="${test.class}" outfile="${dir.temp}/${test.name}.test" />
+		</junit>
+	</target>
+
+	<target name="export_app" depends="test_app">
+		<fail if="test.error" message="Testing error(s)..." />
+		<fail if="test.fail" message="Testing failure(s)..." />
+		<copy file="${dir.temp}/${app.name}.jar" tofile="${dir.pub}/${file.app.pub}" overwrite="true" />
+	</target>
+
+	<target name="export_test" depends="test_app">
+		<fail if="test.error" message="Testing error(s)..." />
+		<fail if="test.fail" message="Testing failure(s)..." />
+		<copy file="${dir.temp}/${test.name}.jar" tofile="${dir.pub}/${file.test.pub}" overwrite="true" />
+	</target>
+
+	<target name="export_app_doc" depends="javadoc_app">
+		<fail if="test.error" message="Testing error(s)..." />
+		<fail if="test.fail" message="Testing failure(s)..." />
+		<tar destfile="${dir.pub}/${file.app_doc.pub}" compression="gzip">
+			<tarfileset dir="${dir.app.doc}" prefix="${app.name}_doc-${app.version}-${app.state}" />
+		</tar>
+	</target>
+
+	<target name="export_test_doc" depends="javadoc_test">
+		<fail if="test.error" message="Testing error(s)..." />
+		<fail if="test.fail" message="Testing failure(s)..." />
+		<tar destfile="${dir.pub}/${file.test_doc.pub}" compression="gzip">
+			<tarfileset dir="${dir.test.doc}" prefix="${test.name}_doc-${app.version}-${app.state}" />
+		</tar>
+	</target>
+
+	<target name="export_app_src">
+		<fail if="test.error" message="Testing error(s)..." />
+		<fail if="test.fail" message="Testing failure(s)..." />
+		<tar destfile="${dir.pub}/${file.app_src.pub}" compression="gzip">
+			<tarfileset dir="${dir.app.src}" prefix="${app.name}_src-${app.version}-${app.state}" />
+		</tar>
+	</target>
+
+	<target name="export_test_src">
+		<fail if="test.error" message="Testing error(s)..." />
+		<fail if="test.fail" message="Testing failure(s)..." />
+		<tar destfile="${dir.pub}/${file.test_src.pub}" compression="gzip">
+			<tarfileset dir="${dir.test.src}" prefix="${test.name}_src-${app.version}-${app.state}" />
+		</tar>
+	</target>
+
+	<target name="export_all">
+		<antcall target="export_app" />
+		<antcall target="export_test" />
+		<antcall target="export_app_doc" />
+		<antcall target="export_test_doc" />
+		<antcall target="export_app_src" />
+		<antcall target="export_test_src" />
+	</target>
+
+	<target name="run_app_prod" depends="jar_app">
+		<java jar="${dir.temp}/${app.name}.jar" fork="true">
+			<sysproperty key="FileMonitor.LOGLEVEL" value="OFF" />
+		</java>
+	</target>
+
+	<target name="run_app_debug" depends="jar_app">
+		<java jar="${dir.temp}/${app.name}.jar" fork="true">
+			<sysproperty key="FileMonitor.LOGLEVEL" value="ALL" />
+		</java>
+	</target>
+
+	<target name="run_test" depends="jar_test">
+		<java jar="${dir.temp}/${test.name}.jar" fork="true" />
+	</target>
+
+	<target name="run_all" depends="jar_all">
+		<antcall target="run_test" />
+		<antcall target="run_app_debug" />
+		<antcall target="run_app_prod" />
+	</target>
+
+	<target name="main">
+		<antcall target="clean_all" />
+		<antcall target="compile_all" />
+		<antcall target="javadoc_all" />
+		<antcall target="jar_all" />
+		<antcall target="test_app" />
+		<antcall target="export_all" />
+		<antcall target="run_all" />
+		<antcall target="clean_all" />
+	</target>
 
 </project>
