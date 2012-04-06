@@ -1,5 +1,7 @@
 package file_monitor;
 
+import java.net.URL;
+
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
@@ -17,17 +19,16 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
-		/*
-		 * try { Main.logger.setLevel(Level.parse(System
-		 * .getProperty("FileMonitor.LOGLEVEL"))); } catch (Exception _) {
-		 * Main.logger.setLevel(Level.ALL); }
-		 */new Main(args);
+		new Main(args);
 		JOptionPane pane = new JOptionPane("Monitoring current folder...",
 				JOptionPane.INFORMATION_MESSAGE);
-		pane.setOptions(new String [] {"Cancel"});
-		ImageIcon icon = new ImageIcon("icon.png");
+		pane.setOptions(new String[] { "Cancel" });
+
+		URL url = ClassLoader.getSystemClassLoader().getResource("icon.png");
+		ImageIcon icon = new ImageIcon(url);
+
 		pane.setIcon(icon);
-		
+
 		JDialog dialog = pane.createDialog(null, "File Monitoring");
 		dialog.setIconImage(icon.getImage());
 		dialog.pack();
