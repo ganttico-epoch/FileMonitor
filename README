@@ -5,6 +5,9 @@
 Author: Nicolas Cenerario (as Ganttico Epoch)
 Contact: ganttico.epoch@gmail.com
 
+Author: Nicolas Cenerario
+Contact: nicolas.cenerario@gmail.com
+
 Forked author: Nicolas Cenerario (ncenerar@free.fr)
 
 Keywords: java, file monitor, track duplicate, index, 
@@ -12,9 +15,7 @@ Keywords: java, file monitor, track duplicate, index,
 Link: https://github.com/ganttico-epoch/FileMonitor
 Latest stable:
 
-
-
-# Description # 
+# Description #
 ###############
 This application indexes, monitors and tracks one folder. It helps keeping
 things sorted. Choose one folder to archive everything in your computer. Move
